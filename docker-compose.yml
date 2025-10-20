@@ -17,7 +17,7 @@ services:
       - PORT=3000
       - NATS_SERVERS=nats://nats-server:4222
 
-products-ms:
+products-microservice:
   build: ./products-microservice
   volumes:
     - ./products-microservice/src:/usr/src/app/src
@@ -27,7 +27,7 @@ products-ms:
     - NATS_SERVERS=nats://nats-server:4222
     - DATABASE_URL=file:./dev.d
 
-  orders-ms:
+  orders-microservice:
     depends_on:
       - orders-db
     build: ./orders-microservice
