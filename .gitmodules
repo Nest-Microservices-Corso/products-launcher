@@ -13,3 +13,6 @@
 [submodule "payments-microservices"]
 	path = payments-microservices
 	url = https://github.com/Nest-Microservices-Corso/Payments-ms.git
+[submodule "auth-ms"]
+	path = auth-ms
+	url = https://github.com/Nest-Microservices-Corso/auth-ms.git
