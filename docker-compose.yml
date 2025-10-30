@@ -15,71 +15,83 @@ services:
       - PORT=3000
       - NATS_SERVERS=nats://nats-server:4222
 
-  products-ms:
-    build: ./products-microservice
+  auth-ms:
+    container_name: auth-ms
+    build: ./auth-ms
     volumes:
-      - ./products-microservice/src:/usr/src/app/src
+      - ./auth-ms/src:/usr/src/app/src
     command: npm run start:dev
     environment:
-      - PORT=3001
+      - PORT=3004
       - NATS_SERVERS=nats://nats-server:4222
-      - DATABASE_URL=file:./dev.db
+      - DATABASE_URL=${AUTH_DATABASE_URL}
 
-  orders-db:
-    container_name: orders_database
-    image: postgres:16.2
-    restart: always
-    volumes:
-      - ./orders-microservice/postgres:/var/lib/postgresql/data
-    ports:
-      - "5432:5432"
-    environment:
-      - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=123456
-      - POSTGRES_DB=ordersdb
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres -d ordersdb || exit 1"]
-      interval: 5s
-      timeout: 3s
-      retries: 30
-
-  orders-ms:
-    build: ./orders-microservice
-    depends_on:
-      orders-db:
-        condition: service_healthy
-    volumes:
-      - ./orders-microservice/src:/usr/src/app/src
-    environment:
-      - PORT=3002
-      - DATABASE_URL=postgresql://postgres:123456@orders-db:5432/ordersdb?schema=public
-      # opcional, pero recomendable para prisma migrate dev
-      - SHADOW_DATABASE_URL=postgresql://postgres:123456@orders-db:5432/ordersdb_shadow?schema=public
-      - NATS_SERVERS=nats://nats-server:4222
-    # Espera a Postgres con pg_isready y luego corre prisma y Nest
-    command: >
-      sh -lc "
-      apk add --no-cache postgresql-client >/dev/null 2>&1 || true;
-      until pg_isready -h orders-db -U postgres -d ordersdb; do
-        echo 'esperando postgres...'; sleep 1;
-      done;
-      npx prisma generate &&
-      npx prisma migrate dev &&
-      npm run start:dev
-      "
-
-  payments-ms:
-    container_name: payments-ms
-    build: ./payments-ms
-    volumes:
-      - ./payments-ms/src:/usr/src/app/src
-    command: npm run start:dev
-    ports:
-      - "${PAYMENT_MS_PORT}:${PAYMENT_MS_PORT}"
-    environment:
-      - PORT=${PAYMENT_MS_PORT}
-      - NATS_SERVERS=nats://nats-server:4222
-      - STRIPE_SECRET=${STRIPE_SECRET}
-      - STRIPE_SUCCESS_URL=${STRIPE_SUCCESS_URL}
-      - STRIPE_CANCEL_URL=${STRIPE_CANCEL_URL}
-      - STRIPE_ENDPOINT_SECRET=${STRIPE_ENDPOINT_SECRET}
+  #products-ms:
+  #  build: ./products-microservice
+  #  volumes:
+  #    - ./products-microservice/src:/usr/src/app/src
+  #  command: npm run start:dev
+  #  environment:
+  #    - PORT=3001
+  #    - NATS_SERVERS=nats://nats-server:4222
+  #    - DATABASE_URL=file:./dev.db
+  #
+  #orders-db:
+  #  container_name: orders_database
+  #  image: postgres:16.2
+  #  restart: always
+  #  volumes:
+  #    - ./orders-microservice/postgres:/var/lib/postgresql/data
+  #  ports:
+  #    - "5432:5432"
+  #  environment:
+  #    - POSTGRES_USER=postgres
+  #    - POSTGRES_PASSWORD=123456
+  #    - POSTGRES_DB=ordersdb
+  #  healthcheck:
+  #    test: ["CMD-SHELL", "pg_isready -U postgres -d ordersdb || exit 1"]
+  #    interval: 5s
+  #    timeout: 3s
+  #    retries: 30
+  #
+  #orders-ms:
+  #  build: ./orders-microservice
+  #  depends_on:
+  #    orders-db:
+  #      condition: service_healthy
+  #  volumes:
+  #    - ./orders-microservice/src:/usr/src/app/src
+  #  environment:
+  #    - PORT=3002
+  #    - DATABASE_URL=postgresql://postgres:123456@orders-db:5432/ordersdb?schema=public
+  #    # opcional, pero recomendable para prisma migrate dev
+  #    - SHADOW_DATABASE_URL=postgresql://postgres:123456@orders-db:5432/ordersdb_shadow?schema=public
+  #    - NATS_SERVERS=nats://nats-server:4222
+  #  # Espera a Postgres con pg_isready y luego corre prisma y Nest
+  #  command: >
+  #    sh -lc "
+  #    apk add --no-cache postgresql-client >/dev/null 2>&1 || true;
+  #    until pg_isready -h orders-db -U postgres -d ordersdb; do
+  #      echo 'esperando postgres...'; sleep 1;
+  #    done;
+  #    npx prisma generate &&
+  #    npx prisma migrate dev &&
+  #    npm run start:dev
+  #    "
+  #
+  #payments-ms:
+  #  container_name: payments-ms
+  #  build: ./payments-microservices
+  #  volumes:
+  #    - ./payments-microservices/src:/usr/src/app/src
+  #  command: npm run start:dev
+  #  ports:
+  #    - "${PAYMENT_MS_PORT}:${PAYMENT_MS_PORT}"
+  #  environment:
+  #    - PORT=${PAYMENT_MS_PORT}
+  #    - NATS_SERVERS=nats://nats-server:4222
+  #    - STRIPE_SECRET=${STRIPE_SECRET}
+  #    - STRIPE_SUCCESS_URL=${STRIPE_SUCCESS_URL}
+  #    - STRIPE_CANCEL_URL=${STRIPE_CANCEL_URL}
+  #    - STRIPE_ENDPOINT_SECRET=${STRIPE_ENDPOINT_SECRET}
+  #
